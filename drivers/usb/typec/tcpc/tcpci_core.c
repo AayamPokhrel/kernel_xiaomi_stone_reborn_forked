@@ -453,25 +453,27 @@ static void bat_update_work_func(struct work_struct *work)
 	ret = power_supply_get_property(
 			tcpc->bat_psy, POWER_SUPPLY_PROP_CAPACITY, &value);
 	if (ret == 0) {
-		TCPC_INFO("%s battery update soc = %d\n",
-					__func__, value.intval);
-		tcpc->bat_soc = value.intval;
+		if (tcpc->bat_soc != value.intval) {
+			TCPC_INFO("%s battery update soc = %d\n",
+						__func__, value.intval);
+			tcpc->bat_soc = value.intval;
+		}
 	} else
 		TCPC_ERR("%s get battery capacity fail\n", __func__);
 
 	ret = power_supply_get_property(tcpc->bat_psy,
 		POWER_SUPPLY_PROP_STATUS, &value);
 	if (ret == 0) {
+		uint8_t old_status = tcpc->charging_status;
 		if (value.intval == POWER_SUPPLY_STATUS_CHARGING) {
-			TCPC_INFO("%s Battery Charging\n", __func__);
 			tcpc->charging_status = BSDO_BAT_INFO_CHARGING;
 		} else if (value.intval == POWER_SUPPLY_STATUS_DISCHARGING) {
-			TCPC_INFO("%s Battery Discharging\n", __func__);
 			tcpc->charging_status = BSDO_BAT_INFO_DISCHARGING;
 		} else {
-			TCPC_INFO("%s Battery Idle\n", __func__);
 			tcpc->charging_status = BSDO_BAT_INFO_IDLE;
 		}
+		if (old_status != tcpc->charging_status)
+			TCPC_INFO("%s Battery status changed to %d\n", __func__, tcpc->charging_status);
 	}
 	if (ret < 0)
 		TCPC_ERR("%s get battery charger now fail\n", __func__);
@@ -532,7 +534,7 @@ static void tcpc_event_init_work(struct work_struct *work)
 		return;
 	}
 	tcpc->charging_status = BSDO_BAT_INFO_IDLE;
-	tcpc->bat_soc = 0;
+	tcpc->bat_soc = -1;
 	tcpc->bat_nb.notifier_call = bat_nb_call_func;
 	tcpc->bat_nb.priority = 0;
 	retval = power_supply_reg_notifier(&tcpc->bat_nb);
