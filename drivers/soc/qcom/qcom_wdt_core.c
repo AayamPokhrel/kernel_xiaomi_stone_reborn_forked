@@ -115,28 +115,31 @@ out:
 
 static void print_irq_stat(struct msm_watchdog_data *wdog_dd)
 {
+	/* Suppress noisy periodic printk to save power and eliminate dmesg spam */
+#ifdef DEBUG
 	int index;
 	int cpu;
 	struct qcom_irq_info *info;
 
-	pr_info("(virq:irq_count)- ");
+	pr_debug("(virq:irq_count)- ");
 	for (index = 0; index < NR_TOP_HITTERS; index++) {
 		info = &wdog_dd->irq_counts[index];
-		pr_cont("%u:%u ", info->irq, info->total_count);
+		pr_debug("%u:%u ", info->irq, info->total_count);
 	}
-	pr_cont("\n");
+	pr_debug("\n");
 
-	pr_info("(cpu:irq_count)- ");
+	pr_debug("(cpu:irq_count)- ");
 	for_each_possible_cpu(cpu)
-		pr_cont("%u:%u ", cpu, wdog_dd->tot_irq_count[cpu]);
-	pr_cont("\n");
+		pr_debug("%u:%u ", cpu, wdog_dd->tot_irq_count[cpu]);
+	pr_debug("\n");
 
-	pr_info("(ipi:irq_count)- ");
+	pr_debug("(ipi:irq_count)- ");
 	for (index = 0; index < NR_IPI; index++) {
 		info = &wdog_dd->ipi_counts[index];
-		pr_cont("%u:%u ", info->irq, info->total_count);
+		pr_debug("%u:%u ", info->irq, info->total_count);
 	}
-	pr_cont("\n");
+	pr_debug("\n");
+#endif
 }
 
 static void compute_irq_stat(struct work_struct *work)
