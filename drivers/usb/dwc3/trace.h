@@ -235,7 +235,7 @@ DECLARE_EVENT_CLASS(dwc3_log_trb,
 		__entry->bph = trb->bph;
 		__entry->size = trb->size;
 		__entry->ctrl = trb->ctrl;
-		__entry->type = dep->endpoint.desc ? usb_endpoint_type(dep->endpoint.desc) : 0;
+		__entry->type = usb_endpoint_type(dep->endpoint.desc);
 		__entry->enqueue = dep->trb_enqueue;
 		__entry->dequeue = dep->trb_dequeue;
 	),
