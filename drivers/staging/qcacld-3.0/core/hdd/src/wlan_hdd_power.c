@@ -209,12 +209,28 @@ hdd_send_igmp_offload_params(struct hdd_adapter *adapter,
 			     bool enable)
 {
 	struct wlan_objmgr_vdev *vdev;
-	struct in_device *in_dev = adapter->dev->ip_ptr;
+	struct in_device *in_dev;
 	struct ip_mc_list *ip_list;
 	struct pmo_igmp_offload_req *igmp_req = NULL;
+	struct hdd_context *hdd_ctx;
 	int count = 0;
 	QDF_STATUS status;
 
+	if (!adapter) {
+		hdd_err("adapter is NULL");
+		return QDF_STATUS_E_FAILURE;
+	}
+
+	hdd_ctx = WLAN_HDD_GET_CTX(adapter);
+	if (!hdd_ctx || !hdd_ctx->psoc) {
+		hdd_err("hdd_ctx or psoc is NULL");
+		return QDF_STATUS_E_FAILURE;
+	}
+
+	if (!ucfg_pmo_is_igmp_offload_enabled(hdd_ctx->psoc))
+		return QDF_STATUS_SUCCESS;
+
+	in_dev = adapter->dev->ip_ptr;
 	if (!in_dev) {
 		hdd_err("in_dev is NULL");
 		return QDF_STATUS_E_FAILURE;
@@ -254,8 +270,8 @@ hdd_send_igmp_offload_params(struct hdd_adapter *adapter,
 	}
 
 	status = ucfg_pmo_enable_igmp_offload(vdev, igmp_req);
-	if (status != QDF_STATUS_SUCCESS)
-		hdd_info("Failed to enable igmp offload");
+	if (status != QDF_STATUS_SUCCESS && status != QDF_STATUS_E_NOSUPPORT)
+		hdd_info("Failed to %s igmp offload: %d", enable ? "enable" : "disable", status);
 
 	hdd_objmgr_put_vdev(vdev);
 	qdf_mem_free(igmp_req);
@@ -274,17 +290,25 @@ out:
 static void hdd_enable_igmp_offload(struct hdd_adapter *adapter)
 {
 	QDF_STATUS status;
-	struct wlan_objmgr_vdev *vdev;
+	struct hdd_context *hdd_ctx;
 
-	vdev = hdd_objmgr_get_vdev(adapter);
-	if (!vdev) {
-		hdd_err("vdev is NULL");
+	if (!adapter) {
+		hdd_err("adapter is NULL");
 		return;
 	}
+
+	hdd_ctx = WLAN_HDD_GET_CTX(adapter);
+	if (!hdd_ctx || !hdd_ctx->psoc) {
+		hdd_err("hdd_ctx or psoc is NULL");
+		return;
+	}
+
+	if (!ucfg_pmo_is_igmp_offload_enabled(hdd_ctx->psoc))
+		return;
+
 	status = hdd_send_igmp_offload_params(adapter, true);
-	if (status != QDF_STATUS_SUCCESS)
+	if (status != QDF_STATUS_SUCCESS && status != QDF_STATUS_E_NOSUPPORT)
 		hdd_info("Failed to enable igmp offload");
-	hdd_objmgr_put_vdev(vdev);
 }
 
 /**
@@ -298,17 +322,25 @@ static void hdd_enable_igmp_offload(struct hdd_adapter *adapter)
 static void hdd_disable_igmp_offload(struct hdd_adapter *adapter)
 {
 	QDF_STATUS status;
-	struct wlan_objmgr_vdev *vdev;
+	struct hdd_context *hdd_ctx;
 
-	vdev = hdd_objmgr_get_vdev(adapter);
-	if (!vdev) {
-		hdd_err("vdev is NULL");
+	if (!adapter) {
+		hdd_err("adapter is NULL");
 		return;
 	}
+
+	hdd_ctx = WLAN_HDD_GET_CTX(adapter);
+	if (!hdd_ctx || !hdd_ctx->psoc) {
+		hdd_err("hdd_ctx or psoc is NULL");
+		return;
+	}
+
+	if (!ucfg_pmo_is_igmp_offload_enabled(hdd_ctx->psoc))
+		return;
+
 	status = hdd_send_igmp_offload_params(adapter, false);
-	if (status != QDF_STATUS_SUCCESS)
-		hdd_info("Failed to enable igmp offload");
-	hdd_objmgr_put_vdev(vdev);
+	if (status != QDF_STATUS_SUCCESS && status != QDF_STATUS_E_NOSUPPORT)
+		hdd_info("Failed to disable igmp offload");
 }
 #else
 static inline void
