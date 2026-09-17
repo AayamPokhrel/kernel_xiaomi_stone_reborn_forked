@@ -316,7 +316,7 @@ void dwc3_gadget_giveback(struct dwc3_ep *dep, struct dwc3_request *req,
 	dwc3_gadget_del_and_unmap_request(dep, req, status);
 	req->status = DWC3_REQUEST_STATUS_COMPLETED;
 
-	if (usb_endpoint_xfer_isoc(dep->endpoint.desc) &&
+	if (dep->endpoint.desc && usb_endpoint_xfer_isoc(dep->endpoint.desc) &&
 					(list_empty(&dep->started_list))) {
 		dep->flags |= DWC3_EP_PENDING_REQUEST;
 		dbg_event(dep->number, "STARTEDLISTEMPTY", 0);
@@ -3260,7 +3260,7 @@ static int dwc3_gadget_ep_reclaim_completed_trb(struct dwc3_ep *dep,
 	 * For isochronous transfers, the first TRB in a service interval must
 	 * have the Isoc-First type. Track and report its interval frame number.
 	 */
-	if (usb_endpoint_xfer_isoc(dep->endpoint.desc) &&
+	if (dep->endpoint.desc && usb_endpoint_xfer_isoc(dep->endpoint.desc) &&
 	    (trb->ctrl & DWC3_TRBCTL_ISOCHRONOUS_FIRST)) {
 		unsigned int frame_number;
 
@@ -3487,7 +3487,7 @@ static void dwc3_gadget_endpoint_transfer_in_progress(struct dwc3_ep *dep,
 		dbg_event(dep->number, "MISSEDISOC", dep->missed_isoc_packets);
 	}
 
-	if (usb_endpoint_xfer_isoc(dep->endpoint.desc) &&
+	if (dep->endpoint.desc && usb_endpoint_xfer_isoc(dep->endpoint.desc) &&
 			(list_empty(&dep->started_list))) {
 		stop = true;
 		dbg_event(dep->number, "STOPXFER", dep->frame_number);
