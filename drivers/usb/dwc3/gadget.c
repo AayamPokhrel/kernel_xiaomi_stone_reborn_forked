@@ -206,7 +206,7 @@ int dwc3_gadget_resize_tx_fifos(struct dwc3 *dwc, struct dwc3_ep *dep)
 		return 0;
 
 	/* resize IN endpoints excepts ep0 */
-	if (!usb_endpoint_dir_in(dep->endpoint.desc) || dep->number <= 1)
+	if (!dep->endpoint.desc || !usb_endpoint_dir_in(dep->endpoint.desc) || dep->number <= 1)
 		return 0;
 
 	/* Don't resize already resized IN endpoint */
@@ -1482,7 +1482,7 @@ static int __dwc3_gadget_kick_transfer(struct dwc3_ep *dep)
 	int				ret;
 	u32				cmd;
 
-	if (!dwc3_calc_trbs_left(dep))
+	if (!dep->endpoint.desc || !dwc3_calc_trbs_left(dep))
 		return 0;
 
 	starting = !(dep->flags & DWC3_EP_TRANSFER_STARTED);
@@ -1763,7 +1763,7 @@ static int __dwc3_gadget_ep_queue(struct dwc3_ep *dep, struct dwc3_request *req)
 	 * Without this trick, we are very, very likely gonna get Bus Expiry
 	 * errors which will force us issue EndTransfer command.
 	 */
-	if (usb_endpoint_xfer_isoc(dep->endpoint.desc)) {
+	if (dep->endpoint.desc && usb_endpoint_xfer_isoc(dep->endpoint.desc)) {
 		if (!(dep->flags & DWC3_EP_PENDING_REQUEST) &&
 				!(dep->flags & DWC3_EP_TRANSFER_STARTED))
 			return 0;
@@ -2014,7 +2014,7 @@ int __dwc3_gadget_ep_set_halt(struct dwc3_ep *dep, int value, int protocol)
 			return 0;
 
 		if ((dep->flags & DWC3_EP_DELAY_START) &&
-		    !usb_endpoint_xfer_isoc(dep->endpoint.desc))
+		    (!dep->endpoint.desc || !usb_endpoint_xfer_isoc(dep->endpoint.desc)))
 			__dwc3_gadget_kick_transfer(dep);
 
 		dep->flags &= ~DWC3_EP_DELAY_START;
@@ -3378,7 +3378,7 @@ static int dwc3_gadget_ep_cleanup_completed_request(struct dwc3_ep *dep,
 	if (!dwc3_gadget_ep_request_completed(req))
 		goto out;
 
-	if (req->needs_extra_trb) {
+	if (req->needs_extra_trb && dep->endpoint.desc) {
 		unsigned int maxp = usb_endpoint_maxp(dep->endpoint.desc);
 
 		ret = dwc3_gadget_ep_reclaim_trb_linear(dep, req, event,
@@ -3610,7 +3610,7 @@ static void dwc3_endpoint_interrupt(struct dwc3 *dwc,
 			}
 
 			if ((dep->flags & DWC3_EP_DELAY_START) &&
-			    !usb_endpoint_xfer_isoc(dep->endpoint.desc))
+			    (!dep->endpoint.desc || !usb_endpoint_xfer_isoc(dep->endpoint.desc)))
 				__dwc3_gadget_kick_transfer(dep);
 
 			dep->flags &= ~DWC3_EP_DELAY_START;
