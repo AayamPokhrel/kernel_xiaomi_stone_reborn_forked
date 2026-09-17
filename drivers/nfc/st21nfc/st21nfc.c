@@ -539,6 +539,7 @@ static ssize_t st21nfc_dev_write(struct file *filp, const char __user *buf,
 		filp->private_data, struct st21nfc_device, st21nfc_device);
 	char *tmp = NULL;
 	int ret = count;
+	int retry;
 
 	if (enable_debug_log) {
 		//pr_debug("%s: st21nfc_dev ptr %p\n", __func__, st21nfc_dev);
@@ -554,10 +555,19 @@ static ssize_t st21nfc_dev_write(struct file *filp, const char __user *buf,
 		return -EFAULT;
 	}
 
-	/* Write data */
-	ret = i2c_master_send(st21nfc_dev->client, tmp, count);
+	/* Write data with retry for sleep/wake transitions */
+	for (retry = 0; retry < 3; retry++) {
+		ret = i2c_master_send(st21nfc_dev->client, tmp, count);
+		if (ret == count)
+			break;
+		if (ret == -ENOTCONN || ret == -ETIMEDOUT || ret == -EIO)
+			usleep_range(2000, 3000);
+		else
+			break;
+	}
 	if (ret != count) {
-		pr_err("%s : i2c_master_send returned %d\n", __func__, ret);
+		if (enable_debug_log)
+			pr_err("%s : i2c_master_send returned %d\n", __func__, ret);
 		ret = -EIO;
 	}
 	kfree(tmp);
