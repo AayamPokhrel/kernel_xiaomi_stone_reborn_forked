@@ -57,13 +57,13 @@ do {										\
 #define adapter_info(fmt, ...)							\
 do {										\
 	if (log_level >= 1)							\
-		printk(KERN_ERR "[xm_pd_adapter] " fmt, ##__VA_ARGS__);	\
+		printk(KERN_INFO "[xm_pd_adapter] " fmt, ##__VA_ARGS__);	\
 } while (0)
 
 #define adapter_dbg(fmt, ...)							\
 do {										\
 	if (log_level >= 2)							\
-		printk(KERN_ERR "[xm_pd_adapter] " fmt, ##__VA_ARGS__);	\
+		printk(KERN_DEBUG "[xm_pd_adapter] " fmt, ##__VA_ARGS__);	\
 } while (0)
 
 struct xm_pd_adapter_info {
@@ -134,7 +134,7 @@ static int pd_tcp_notifier_call(struct notifier_block *pnb,
 
 	pinfo = container_of(pnb, struct xm_pd_adapter_info, pd_nb);
 
-	adapter_err("PD charger event:%d %d\n", (int)event,
+	adapter_dbg("PD charger event:%d %d\n", (int)event,
 		(int)noti->pd_state.connected);
 	switch (event) {
 	case TCP_NOTIFY_PD_STATE:
