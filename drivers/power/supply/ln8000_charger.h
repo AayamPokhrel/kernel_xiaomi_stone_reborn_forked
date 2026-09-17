@@ -338,6 +338,7 @@ struct ln8000_info {
 	bool usb_present;           /* usb plugged (present) */
 	bool chg_en;                /* charging enavbled */
 	bool rcp_en;                /* reverse current protection enabled */
+	bool is_suspended;          /* device in system suspend */
 	int vbat_ovp_alarm_th;      /* vbat ovp alarm threshold */
 	int vin_ovp_alarm_th;       /* vin ovp alarm threshold */
 	int iin_ocp_alarm_th;       /* iin ocp alarm threshold */

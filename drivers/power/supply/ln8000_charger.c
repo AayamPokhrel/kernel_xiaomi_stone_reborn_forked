@@ -164,7 +164,8 @@ static int ln8000_update_reg(struct ln8000_info *info, u8 addr, u8 mask, u8 data
 		}
 	}
 	/* Log error after a few retries */
-	ln_err("failed-update, reg(0x%02X), ret(%d)\n", addr, ret);
+	if (ret != -EACCES)
+		ln_err("failed-update, reg(0x%02X), ret(%d)\n", addr, ret);
 	
 	return ret;
 }
@@ -753,7 +754,8 @@ static int ln8000_get_adc_data(struct ln8000_info *info, unsigned int ch, int *r
 	/* pause adc update */
 	ret  = ln8000_update_reg(info, LN8000_REG_TIMER_CTRL, 0x1 << 1, 0x1 << 1);
 	if (ret < 0) {
-		ln_err("fail to update bit PAUSE_ADC_UPDATE:1 (ret=%d)\n", ret);
+		if (ret != -EACCES)
+			ln_err("fail to update bit PAUSE_ADC_UPDATE:1 (ret=%d)\n", ret);
 		return ret;
 	}
 
@@ -923,15 +925,18 @@ static int ln8000_charger_get_property(struct power_supply *psy,
 		val->intval = ln8000_get_iin_limit(info);
 		break;
 	case POWER_SUPPLY_PROP_VOLTAGE_NOW:
-		ln8000_get_adc_data(info, LN8000_ADC_CH_VIN, &info->vbus_uV);
+		if (!info->is_suspended)
+			ln8000_get_adc_data(info, LN8000_ADC_CH_VIN, &info->vbus_uV);
 		val->intval = info->vbus_uV/1000;
 		break;
 	case POWER_SUPPLY_PROP_CURRENT_NOW:
-		ln8000_get_adc_data(info, LN8000_ADC_CH_IIN, &info->iin_uA);
+		if (!info->is_suspended)
+			ln8000_get_adc_data(info, LN8000_ADC_CH_IIN, &info->iin_uA);
 		val->intval = info->iin_uA/1000;
 		break;
 	case POWER_SUPPLY_PROP_TEMP:
-		ln8000_get_adc_data(info, LN8000_ADC_CH_DIETEMP, &info->tdie_dC);
+		if (!info->is_suspended)
+			ln8000_get_adc_data(info, LN8000_ADC_CH_DIETEMP, &info->tdie_dC);
 		val->intval = info->tdie_dC;
 		break;
 	case POWER_SUPPLY_PROP_MODEL_NAME:
@@ -1743,6 +1748,8 @@ static int ln8000_suspend(struct device *dev)
 {
 	struct ln8000_info *info = dev_get_drvdata(dev);
 
+	info->is_suspended = true;
+
 	if (device_may_wakeup(dev) && info->client->irq)
 		enable_irq_wake(info->client->irq);
 
@@ -1754,6 +1761,8 @@ static int ln8000_suspend(struct device *dev)
 static int ln8000_resume(struct device *dev)
 {
 	struct ln8000_info *info = dev_get_drvdata(dev);
+
+	info->is_suspended = false;
 
 	if (device_may_wakeup(dev) && info->client->irq)
 		disable_irq_wake(info->client->irq);
