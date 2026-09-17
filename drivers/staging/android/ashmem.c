@@ -437,15 +437,7 @@ static int ashmem_mmap(struct file *file, struct vm_area_struct *vma)
 	get_file(asma->file);
 
 	if (vma->vm_flags & VM_SHARED) {
-<<<<<<< HEAD
-		ret = shmem_zero_setup(vma);
-		if (ret) {
-			fput(asma->file);
-			goto out;
-		}
-=======
 		shmem_set_file(vma, asma->file);
->>>>>>> 6f1456a9c959 (ANDROID: ashmem: Add shmem_set_file to mm/shmem.c)
 	} else {
 		vma_set_anonymous(vma);
 		if (vma->vm_file)
@@ -453,17 +445,9 @@ static int ashmem_mmap(struct file *file, struct vm_area_struct *vma)
 		vma->vm_file = asma->file;
 	}
 
-<<<<<<< HEAD
-	if (vma->vm_file)
-		fput(vma->vm_file);
-	vma->vm_file = asma->file;
-
 out:
 	mutex_unlock(&ashmem_mutex);
 	return ret;
-=======
-	return 0;
->>>>>>> 6f1456a9c959 (ANDROID: ashmem: Add shmem_set_file to mm/shmem.c)
 }
 
 /*
