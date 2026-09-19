@@ -462,7 +462,10 @@ int cam_res_mgr_gpio_request(struct device *dev, uint gpio,
 	if (!gpio_found) {
 		CAM_DBG(CAM_RES, "gpio: %u not found in gpio_res list", gpio);
 		rc = gpio_request_one(gpio, flags, label);
-		if (rc) {
+		if (rc == -EBUSY) {
+			CAM_DBG(CAM_RES, "gpio %d:%s already requested", gpio, label);
+			rc = 0;
+		} else if (rc) {
 			CAM_ERR(CAM_RES, "gpio %d:%s request fails rc = %d",
 				gpio, label, rc);
 			goto end;
