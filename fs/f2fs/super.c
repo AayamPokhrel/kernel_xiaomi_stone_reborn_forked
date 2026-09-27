@@ -1784,6 +1784,7 @@ restore_flag:
 static int f2fs_enable_checkpoint(struct f2fs_sb_info *sbi)
 {
 	int retry = DEFAULT_RETRY_IO_COUNT;
+	int ret;
 
 	/* we should flush all the data to keep data consistency */
 	do {
@@ -1796,8 +1797,6 @@ static int f2fs_enable_checkpoint(struct f2fs_sb_info *sbi)
 		f2fs_warn(sbi, "checkpoint=enable has some unwritten data.");
 
 	down_write(&sbi->gc_lock);
-	mutex_lock(&sbi->gc_mutex);
-	int ret;
 	f2fs_dirty_to_prefree(sbi);
 
 	clear_sbi_flag(sbi, SBI_CP_DISABLED);
