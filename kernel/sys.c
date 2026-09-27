@@ -1274,7 +1274,7 @@ SYSCALL_DEFINE1(newuname, struct new_utsname __user *, name)
 			 (u8)((LINUX_VERSION_CODE >> 16) & 0xff), (u8)((LINUX_VERSION_CODE >> 8) & 0xff),
 			 (u16)(LINUX_VERSION_CODE & 0xffff));
 	else if (is_bpfloader)
-		snprintf(tmp.release, sizeof(tmp.release), "5.10.239-Darkmoon-Reborn");
+		snprintf(tmp.release, sizeof(tmp.release), "5.10.239-Darkmoon-Chaos");
 
 	if (copy_to_user(name, &tmp, sizeof(tmp)))
 		return -EFAULT;
