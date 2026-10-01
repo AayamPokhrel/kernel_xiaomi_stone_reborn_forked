@@ -547,7 +547,7 @@ int fts_gesture_init(struct fts_ts_data *ts_data)
 	input_dev->event = fts_gesture_switch;
 	memset(&fts_gesture_data, 0, sizeof(struct fts_gesture_st));
 	ts_data->gesture_bmode = GESTURE_BM_REG;
-	ts_data->gesture_mode = DISABLE;
+	ts_data->gesture_mode = ENABLE;
 
 	FTS_FUNC_EXIT();
 	return 0;
