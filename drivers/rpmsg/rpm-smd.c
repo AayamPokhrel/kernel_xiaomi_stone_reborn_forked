@@ -42,7 +42,7 @@
 #define INV_RSC "resource does not exist"
 #define ERR "err\0"
 #define MAX_ERR_BUFFER_SIZE 128
-#define MAX_WAIT_ON_ACK 24
+#define MAX_WAIT_ON_ACK 64
 #define INIT_ERROR 1
 #define V1_PROTOCOL_VERSION 0x31726576 /* rev1 */
 #define V0_PROTOCOL_VERSION 0 /* rev0 */
